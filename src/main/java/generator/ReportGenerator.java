@@ -5,27 +5,42 @@ import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import exception.FileTypeNotSupportedException;
+import exception.NoFilesToProcessException;
 import impl.CsvRecordParser;
 import impl.JsonRecordParser;
 import impl.XmlRecordParser;
 import model.CsvRecord;
+import model.CsvRecordResult;
 import parser.FileProcessor;
 import util.*;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 
-import static javafx.application.Platform.exit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 public class ReportGenerator {
 
-    public void trigger(String sourcePath, String destination) throws FileTypeNotSupportedException, InterruptedException, ExecutionException {
+    public void trigger(String sourcePath, String destination) throws FileTypeNotSupportedException, InterruptedException, ExecutionException, NoFilesToProcessException {
 
         File folder = new File(sourcePath);
         File[] files = folder.listFiles();
 
+        if(files == null || files.length == 0) {
+            throw new NoFilesToProcessException("No files found in path '" + sourcePath + "' to process. Please add files and retry.");
+        }
         List<String> notProcessed = new ArrayList<>();
 
         ExecutorService processor = Executors.newScheduledThreadPool(FileType.getSupportedTypes().size());
@@ -38,9 +53,7 @@ public class ReportGenerator {
                 //read file and build Record object
 
                 Optional<String> ext = Util.getExtension(file.getName());
-                if (FileType.JSON.name().equalsIgnoreCase(ext.get())
-            || FileType.CSV.name().equalsIgnoreCase(ext.get()) || FileType.XML.name().equalsIgnoreCase(ext.get()) ) {
-
+                if (FileType.getSupportedTypes().contains(ext.get().toLowerCase())) {
 
                     if (FileType.JSON.name().equalsIgnoreCase(ext.get())) {
 
@@ -69,12 +82,13 @@ public class ReportGenerator {
               }
           }
 
-          buildResultFile(destination, recordsResult, Constants.RESULT_FILE_NAME);
           processor.shutdown();
 
-            if(!notProcessed.isEmpty()) {
+          buildResultFile(destination, recordsResult, Constants.RESULT_FILE_NAME);
+
+          if(!notProcessed.isEmpty()) {
                 throw new FileTypeNotSupportedException("File type not supported" + notProcessed.toString() + ". Supported types are: " + FileType.getSupportedTypes());
-            }
+          }
         } catch (IOException e){
             System.out.println(e.getMessage());
         }
@@ -93,13 +107,15 @@ public class ReportGenerator {
             //sort the records by time
             Collections.sort(recordList, new RecordComparator());
 
-            Writer writer = new FileWriter(directory + "/" + fileName);
-            CustomMappingStrategy<CsvRecord> mappingStrategy = new CustomMappingStrategy<>();
-            mappingStrategy.setType(CsvRecord.class);
+            List<CsvRecordResult> resultList = Util.convertCsvToResultCsv(recordList);
 
-            StatefulBeanToCsv<CsvRecord> beanToCsv = new StatefulBeanToCsvBuilder<CsvRecord>(writer)
+            Writer writer = new FileWriter(directory + Constants.PATH_SEPARATOR + fileName);
+            CustomMappingStrategy<CsvRecordResult> mappingStrategy = new CustomMappingStrategy<>();
+            mappingStrategy.setType(CsvRecordResult.class);
+
+            StatefulBeanToCsv<CsvRecordResult> beanToCsv = new StatefulBeanToCsvBuilder<CsvRecordResult>(writer)
                     .withMappingStrategy(mappingStrategy).withSeparator(',').withApplyQuotesToAll(false).build();
-            beanToCsv.write(recordList);
+            beanToCsv.write(resultList);
             writer.close();
 
             Map<String, Long> countByServiceGuid = recordList.stream()

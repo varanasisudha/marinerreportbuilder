@@ -1,4 +1,6 @@
 import exception.FileTypeNotSupportedException;
+import exception.InvalidInputException;
+import exception.NoFilesToProcessException;
 import generator.ReportGenerator;
 
 import java.util.concurrent.ExecutionException;
@@ -10,14 +12,16 @@ public class ReportBuilderDriver {
         try {
             ReportGenerator reportGenerator = new ReportGenerator();
             if(args.length !=2) {
-                System.out.println("Please pass 'source' and 'destination' paths");
-                System.out.println("usage: java -jar mariner-report-builder-1.0-SNAPSHOT.jar source-dir-name destination-dir-name");
-                System.exit(1);
+                throw new InvalidInputException("please pass source and destination paths \n" +
+                        "usage: java -jar mariner-report-builder-1.0-SNAPSHOT.jar reports results ");
+
+            } else {
+                reportGenerator.trigger(args[0], args[1]);
             }
-            reportGenerator.trigger(args[0], args[1]);
         } catch (InterruptedException |ExecutionException e) {
             System.out.print(e.getMessage());
-        } catch (FileTypeNotSupportedException ex) {
+
+        } catch (FileTypeNotSupportedException| NoFilesToProcessException|InvalidInputException ex) {
             System.out.print(ex.getMessage());
         }
 

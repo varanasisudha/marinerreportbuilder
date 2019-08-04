@@ -16,18 +16,8 @@ Steps to run the code:
 
 1. Build the project code using "mvn clean install"
 2. Copy the test files to the a folder in the target folder (where the jar and lib files are present)
-3. Exceute java -jar mariner-report-builder-1.0-SNAPSHOT.jar source-dir-name destination-dir-name 
-Note:jar file, lib foldeer (jar dependencies) and source files should be on same direnctory level
-
-The final report is generated in the destination directory with name "reports.csv"
+3. Exceute java -jar mariner-report-builder-1.0-SNAPSHOT.jar source-dir-name destination-dir-name
 
 
-## Libaries
 
-Gson for Json parsing - Simple parser for Json with annotation support for property names
-OpenCsv for csv parsing - Simple to use and has support to use custom mapping stratgey for column ordering etc, also annotation support
-JaxB for xml parsing - Easy to define mapping and parse the file with in built parsing methods
-
-Custom compataor - for sorting
-Java 8 steams + filters - for filetring the data based on rules
-
+You may fork this repo, commit your work and let us know of your project's location, or you may email us your project files in a zip file.

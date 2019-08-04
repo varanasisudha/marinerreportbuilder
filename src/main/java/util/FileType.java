@@ -1,7 +1,8 @@
 package util;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public enum FileType {
 
@@ -12,12 +13,12 @@ CSV("csv"), JSON ("json"), XML ("xml");
         this.type = type;
     }
 
-    public static List<String> getSupportedTypes() {
+    public static Set<String> getSupportedTypes() {
 
-        List<String>  supportedFileTypes = new ArrayList<>();
-        supportedFileTypes.add(CSV.name());
-        supportedFileTypes.add(JSON.name());
-        supportedFileTypes.add(XML.name());
+        Set<String>  supportedFileTypes = new HashSet<>();
+        supportedFileTypes.add(CSV.name().toLowerCase());
+        supportedFileTypes.add(JSON.name().toLowerCase());
+        supportedFileTypes.add(XML.name().toLowerCase());
 
         return supportedFileTypes;
     }

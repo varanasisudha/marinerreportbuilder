@@ -31,7 +31,7 @@ public class JsonRecordParser implements RecordParser {
             return Util.convertJsontoCsv(jsonRecords);
 
         } catch (IOException ex) {
-
+            System.out.print(ex.getMessage());
         }
 
         return null;

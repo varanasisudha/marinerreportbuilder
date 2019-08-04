@@ -1,6 +1,7 @@
 package util;
 
 import model.CsvRecord;
+import model.CsvRecordResult;
 import model.JsonRecord;
 import model.XmlReport;
 
@@ -44,6 +45,7 @@ public class Util {
        return inetAddress;
 
     }
+
     public static List<CsvRecord> convertXmltoCsv(List<XmlReport> xmlRecords) {
         List<CsvRecord> csvRecords = xmlRecords.stream().filter(xmlRecord -> xmlRecord.getPacketsServiced()!=0)
                 .map(xmlRecord -> new CsvRecord(xmlRecord.getMaxHoleSize(), xmlRecord.getPacketsServiced(), xmlRecord.getPacketsRequested(),
@@ -51,6 +53,20 @@ public class Util {
                         getZonedDateTime(xmlRecord.getRequestTime())))
                 .collect(Collectors.toList());
         return csvRecords;
+    }
+
+    public static List<CsvRecordResult> convertCsvToResultCsv(List<CsvRecord> csvRecords) {
+        List<CsvRecordResult> csvRecordsResult = csvRecords.stream()
+                .map(csvRecord -> new CsvRecordResult(csvRecord.getMaxHoleSize(), csvRecord.getPacketsServiced(), csvRecord.getPacketsRequested(),
+                        csvRecord.getRetriesRequest(), csvRecord.getClientGuid(), csvRecord.getServiceGuid(), csvRecord.getClientAddress().getHostAddress(),
+                        convertDatetoString(csvRecord.getRequestTime())))
+                .collect(Collectors.toList());
+        return csvRecordsResult;
+    }
+
+    private static String convertDatetoString(ZonedDateTime zonedDateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constants.DATE_FORMAT);
+        return zonedDateTime.format(formatter);
     }
 
     public static Optional<String> getExtension(String filename) {
